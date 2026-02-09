@@ -17,7 +17,8 @@ const App = () => {
   return (
     <div>
       <Toaster />
-      <Navbar />
+      {clientToken && <Navbar />}
+
       <Routes>
         {clientToken ? (
           <>
@@ -29,7 +30,7 @@ const App = () => {
           </>
         ) : (
           <>
-            <Route path="/" element={<Login />} />
+            <Route path="*" element={<Login />} />
           </>
         )}
       </Routes>

@@ -91,7 +91,7 @@ const Home = () => {
               className="relative rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl"
             >
               <img
-                src="https://images.unsplash.com/photo-1598550874175-4d0fe4a2c906?q=80&w=1889&auto=format&fit=crop"
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
                 alt="Creator Working"
                 className="w-full h-[550px] object-cover"
               />
@@ -121,15 +121,6 @@ const Home = () => {
                   </p>
                 </div>
               </div>
-            </motion.div>
-
-            {/* Floating Icon Elements */}
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -bottom-6 -left-6 bg-white p-4 rounded-full shadow-lg border border-gray-100 hidden md:block"
-            >
-              <Zap size={32} className="text-orange-500 fill-current" />
             </motion.div>
           </div>
         </div>

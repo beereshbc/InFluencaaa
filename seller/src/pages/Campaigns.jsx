@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast, Toaster } from "react-hot-toast";
 import {
   Instagram,
   Youtube,
@@ -183,7 +182,6 @@ const Campaigns = () => {
 
   return (
     <div className="min-h-screen bg-gray-50/50 pt-24 pb-20 px-4 md:px-8 font-sans">
-      <Toaster position="top-center" />
       <div className="max-w-7xl mx-auto">
         {/* TOP HEADER */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">

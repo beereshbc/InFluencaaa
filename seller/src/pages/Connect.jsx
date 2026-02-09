@@ -13,7 +13,6 @@ import {
   Link2,
 } from "lucide-react";
 import { useSellerContext } from "../context/SellerContext";
-import toast, { Toaster } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
 
 const Connect = () => {
@@ -129,7 +128,6 @@ const Connect = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24 pt-28 px-4 md:px-8 font-sans">
-      <Toaster position="top-center" />
       <div className="max-w-4xl mx-auto">
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>

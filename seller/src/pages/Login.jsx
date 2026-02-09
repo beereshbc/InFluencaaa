@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import { useSellerContext } from "../context/SellerContext";
 
 const Login = () => {
@@ -60,8 +59,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-      <Toaster position="top-center" reverseOrder={false} />
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

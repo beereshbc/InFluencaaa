@@ -12,11 +12,13 @@ import SellerOrder from "./pages/SellerOrder";
 import Earnings from "./pages/Earnings";
 import Analytics from "./pages/Analytics";
 import Footer from "./components/Footer";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   const { sellerToken } = useSellerContext();
   return (
     <div>
+      <Toaster />
       {sellerToken && <Navbar />}
 
       <Routes>

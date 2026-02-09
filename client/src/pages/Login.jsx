@@ -9,7 +9,6 @@ import {
   EyeOff,
   Briefcase,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import { useClientContext } from "../context/ClientContext";
 
 const Login = () => {
@@ -72,8 +71,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-      <Toaster position="top-center" reverseOrder={false} />
-
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

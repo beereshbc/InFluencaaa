@@ -46,7 +46,7 @@ const Navbar = () => {
         <nav className="flex items-center justify-between w-full max-w-6xl bg-white/80 backdrop-blur-md border border-gray-100 p-2 rounded-full shadow-lg">
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3 pl-2 group">
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full group-hover:scale-105 transition-transform overflow-hidden border border-gray-100">
+            <div className="w-9 h-9 md:w-10 md:h-10  group-hover:scale-105 transition-transform overflow-hidden">
               <img
                 src="/in.png"
                 alt="Logo"

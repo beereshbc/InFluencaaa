@@ -14,7 +14,6 @@ import {
   Save,
   ShieldCheck,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import { useSellerContext } from "../context/SellerContext";
 
 const Profile = () => {
@@ -142,7 +141,6 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 pt-28 px-4 md:px-8 font-sans">
-      <Toaster position="top-center" />
       <form onSubmit={handleUpdate} className="max-w-5xl mx-auto space-y-8">
         {/* --- BANNER & HEADER --- */}
         <div className="relative bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
