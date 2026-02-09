@@ -4,8 +4,9 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 import Seller from "../models/SellerModels/Seller.js";
 import Campaign from "../models/SellerModels/Campaign.js";
-import Order from "../models/adminModels/Order.js";
 import Payment from "../models/adminModels/Payment.js";
+import OrderResolution from "../models/adminModels/OrderResolution.js";
+import Order from "../models/adminModels/Order.js";
 
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -208,4 +209,49 @@ export const getOrderDetails = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+export const submitOrderResolution = async (req, res) => {
+  try {
+    const { orderId, sellerId, type, rating, reasonCategory, description } =
+      req.body;
+    const clientId = req.clientId;
+
+    // 1. Create Resolution Record
+    const resolution = await OrderResolution.create({
+      orderId,
+      clientId,
+      sellerId,
+      type,
+      rating: type === "review" ? rating : undefined,
+      reasonCategory,
+      description,
+    });
+
+    // 2. Handle Specific Logics
+    if (type === "review") {
+      // Update Order Status to Completed (if not already)
+      await Order.findByIdAndUpdate(orderId, { status: "completed" });
+
+      // Recalculate Seller Average Rating
+      const reviews = await OrderResolution.find({ sellerId, type: "review" });
+      const avgRating =
+        reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length;
+
+      await Seller.findByIdAndUpdate(sellerId, {
+        rating: avgRating.toFixed(1),
+        $inc: { totalReviews: 1 },
+      });
+    } else if (type === "refund_request") {
+      // Flag order for Admin
+      await Order.findByIdAndUpdate(orderId, { status: "dispute_raised" });
+    }
+
+    res
+      .status(201)
+      .json({ success: true, message: "Submitted successfully", resolution });
+  } catch (error) {
+    console.error("Resolution Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export { registerClient, loginClient, getClientProfile, getAllSellers };

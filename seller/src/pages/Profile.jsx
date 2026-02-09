@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useSellerContext } from "../context/SellerContext";
+import toast from "react-hot-toast";
 
 const Profile = () => {
   const { sellerData, sellerToken, axios, getSellerProfile } =

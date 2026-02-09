@@ -28,7 +28,7 @@ import toast from "react-hot-toast";
 import io from "socket.io-client";
 import { useSellerContext } from "../context/SellerContext";
 
-const ENDPOINT = "http://localhost:4000";
+const ENDPOINT = import.meta.env.VITE_ENDPOINT_URI || "http://localhost:4000";
 let socket;
 
 const SellerOrder = () => {

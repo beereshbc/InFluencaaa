@@ -838,27 +838,6 @@ export const rejectOrderRequest = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-export const getSellerEarnings = async (req, res) => {
-  try {
-    const sellerId = req.sellerId;
-    const earnings = await Payment.find()
-      .populate({
-        path: "orderId",
-        match: { sellerId: sellerId },
-        select:
-          "orderDetails sellerName platform serviceType totalAmount createdAt",
-      })
-      .sort({ updatedAt: -1 });
-
-    const sellerPayments = earnings.filter((p) => p.orderId !== null);
-
-    res.json({ success: true, earnings: sellerPayments });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-// @desc    Get Seller Analytics
-// @route   GET /api/seller/analytics
 export const getSellerAnalytics = async (req, res) => {
   try {
     const sellerId = req.sellerId;
@@ -897,6 +876,201 @@ export const getSellerAnalytics = async (req, res) => {
 
     res.json({ success: true, stats });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+import WithdrawalRequest from "../models/adminModels/WithdrawalRequest.js";
+
+// @desc    Get Earnings & Balance (With 48h Lock Logic)
+// @route   GET /api/seller/earnings
+export const getSellerEarnings = async (req, res) => {
+  try {
+    const sellerId = req.sellerId;
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    // 1. Fetch all Payments related to this Seller
+    const earnings = await Payment.find()
+      .populate({
+        path: "orderId",
+        match: { sellerId: sellerId },
+        select:
+          "orderDetails sellerName platform serviceType totalAmount createdAt",
+      })
+      .sort({ updatedAt: -1 });
+
+    const sellerPayments = earnings.filter((p) => p.orderId !== null);
+
+    // 2. Fetch Pending Withdrawals (Money requested but not yet sent)
+    const pendingWithdrawals = await WithdrawalRequest.find({
+      sellerId,
+      status: "pending",
+    });
+    const totalPendingWithdrawalAmount = pendingWithdrawals.reduce(
+      (acc, curr) => acc + curr.amount,
+      0,
+    );
+
+    // 3. Fetch Completed Withdrawals (Money already sent to bank)
+    const completedWithdrawals = await WithdrawalRequest.find({
+      sellerId,
+      status: "approved",
+    });
+    const totalWithdrawnAmount = completedWithdrawals.reduce(
+      (acc, curr) => acc + curr.amount,
+      0,
+    );
+
+    // 4. Calculate Balances
+    let totalLifetimeEarnings = 0; // Total earned ever (Released Milestones)
+    let withdrawableBalance = 0; // Available to withdraw now
+    let lockedBalance = 0; // Released but < 48h old
+
+    sellerPayments.forEach((payment) => {
+      payment.milestones.forEach((ms) => {
+        if (ms.status === "released" && ms.releasedAt) {
+          const amount = ms.amount; // Use the raw milestone amount (assuming platform fee is handled globally or per milestone)
+
+          totalLifetimeEarnings += amount;
+
+          // Check 48-hour lock
+          const releasedAt = new Date(ms.releasedAt);
+          if (releasedAt < fortyEightHoursAgo) {
+            withdrawableBalance += amount;
+          } else {
+            lockedBalance += amount;
+          }
+        }
+      });
+    });
+
+    // 5. Final Net Available Balance calculation
+    // Available = (Total Older than 48h) - (Already Withdrawn) - (Currently Requested)
+    const netAvailableToWithdraw =
+      withdrawableBalance - totalWithdrawnAmount - totalPendingWithdrawalAmount;
+
+    // Safety check: ensure no negative balance (though logic shouldn't allow it)
+    const finalAvailable = Math.max(0, netAvailableToWithdraw);
+
+    res.json({
+      success: true,
+      earnings: sellerPayments,
+      stats: {
+        totalLifetimeEarnings,
+        withdrawn: totalWithdrawnAmount,
+        pendingRequest: totalPendingWithdrawalAmount,
+        lockedIn48h: lockedBalance,
+        availableToWithdraw: finalAvailable,
+      },
+    });
+  } catch (error) {
+    console.error("Earnings Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Request Payout to Bank
+// @route   POST /api/seller/withdraw
+export const requestWithdrawal = async (req, res) => {
+  try {
+    const sellerId = req.sellerId;
+    const { amount } = req.body;
+
+    // 1. Basic Validation
+    if (!amount || amount < 500) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum withdrawal amount is ₹500.",
+      });
+    }
+
+    // 2. Check Seller Bank Details (Using +select to get hidden fields)
+    const seller = await Seller.findById(sellerId).select(
+      "+payoutDetails.accountNumber +payoutDetails.ifscCode +payoutDetails.bankName +payoutDetails.upiId",
+    );
+
+    if (
+      !seller ||
+      !seller.payoutDetails ||
+      !seller.payoutDetails.accountNumber
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Please complete your Bank Account details in Profile settings first.",
+      });
+    }
+
+    // 3. Recalculate Available Balance (Security Check)
+    // (Reuse the logic from getSellerEarnings to ensure server-side validation)
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const earnings = await Payment.find().populate({
+      path: "orderId",
+      match: { sellerId: sellerId },
+    });
+    const sellerPayments = earnings.filter((p) => p.orderId !== null);
+
+    const pendingWithdrawals = await WithdrawalRequest.find({
+      sellerId,
+      status: "pending",
+    });
+    const completedWithdrawals = await WithdrawalRequest.find({
+      sellerId,
+      status: "approved",
+    });
+
+    const totalPending = pendingWithdrawals.reduce(
+      (acc, curr) => acc + curr.amount,
+      0,
+    );
+    const totalWithdrawn = completedWithdrawals.reduce(
+      (acc, curr) => acc + curr.amount,
+      0,
+    );
+
+    let totalMatureEarnings = 0;
+    sellerPayments.forEach((payment) => {
+      payment.milestones.forEach((ms) => {
+        if (
+          ms.status === "released" &&
+          new Date(ms.releasedAt) < fortyEightHoursAgo
+        ) {
+          totalMatureEarnings += ms.amount;
+        }
+      });
+    });
+
+    const availableBalance =
+      totalMatureEarnings - totalWithdrawn - totalPending;
+
+    if (amount > availableBalance) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient funds. Available withdrawable balance: ₹${availableBalance}`,
+      });
+    }
+
+    // 4. Create Withdrawal Request
+    const withdrawal = await WithdrawalRequest.create({
+      sellerId,
+      amount,
+      payoutDetails: {
+        accountNumber: seller.payoutDetails.accountNumber,
+        ifscCode: seller.payoutDetails.ifscCode,
+        bankName: seller.payoutDetails.bankName,
+        upiId: seller.payoutDetails.upiId,
+      },
+      status: "pending",
+    });
+
+    res.status(201).json({
+      success: true,
+      message:
+        "Withdrawal request submitted successfully. Processing in 24-48 hours.",
+      withdrawal,
+    });
+  } catch (error) {
+    console.error("Withdrawal Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

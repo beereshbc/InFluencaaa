@@ -22,7 +22,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useSellerContext } from "../context/SellerContext";
-
+import toast from "react-hot-toast";
 // --- STATIC CONFIG ---
 const STATIC_PLATFORMS = {
   instagram: {

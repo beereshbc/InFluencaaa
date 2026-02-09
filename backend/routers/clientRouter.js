@@ -7,6 +7,7 @@ import {
   createOrderRequest,
   getMyOrders,
   getOrderDetails,
+  submitOrderResolution,
 } from "../controllers/clientController.js";
 import {
   initiatePayment,
@@ -36,5 +37,6 @@ clientRouter.post("/payment/initiate", clientAuth, initiatePayment); // Step 1: 
 clientRouter.post("/payment/verify", clientAuth, verifyPayment); // Step 2: Confirm & Create Ledger
 clientRouter.post("/payment/release-milestone", clientAuth, releaseMilestone); // Step 3: Release Funds
 clientRouter.get("/order/chat/:orderId", clientAuth, getChatHistory);
+clientRouter.post("/order/resolution", clientAuth, submitOrderResolution);
 
 export default clientRouter;

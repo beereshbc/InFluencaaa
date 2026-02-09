@@ -16,6 +16,7 @@ import {
   loginSeller,
   registerSeller,
   rejectOrderRequest,
+  requestWithdrawal,
   syncPlatform,
   twitterCallback,
   updateCampaignPackage,
@@ -72,5 +73,7 @@ sellerRouter.post(
   sellerAuth,
   requestMilestoneRelease,
 );
+sellerRouter.get("/earnings", sellerAuth, getSellerEarnings);
+sellerRouter.post("/withdraw", sellerAuth, requestWithdrawal);
 
 export default sellerRouter;

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useSellerContext } from "../context/SellerContext";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const { axios, setSellerToken, navigate } = useSellerContext();

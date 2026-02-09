@@ -21,6 +21,8 @@ const allowedOrigins = [
   "https://influencaasellerin.vercel.app",
   "https://influencaaabrandin.vercel.app",
 ];
+// "https://influencaasellerin.vercel.app",
+// "https://influencaaabrandin.vercel.app",
 app.use(express.json());
 app.use(
   cors({

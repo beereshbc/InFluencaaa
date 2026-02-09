@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useSellerContext } from "../context/SellerContext";
 import { useSearchParams } from "react-router-dom";
-
+import toast from "react-hot-toast";
 const Connect = () => {
   const { sellerData, axios, sellerToken, getSellerProfile } =
     useSellerContext();
