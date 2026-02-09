@@ -17,11 +17,9 @@ const PORT = process.env.PORT || 4000;
 await connectDB();
 await connectCloudinary();
 
-const allowedOrigins = [
-  "https://influencaasellerin.vercel.app",
-  "https://influencaaabrandin.vercel.app",
-];
-
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+// "https://influencaasellerin.vercel.app",
+// "https://influencaaabrandin.vercel.app",
 app.use(express.json());
 app.use(
   cors({

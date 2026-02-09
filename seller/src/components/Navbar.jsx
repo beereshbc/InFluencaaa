@@ -29,7 +29,7 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { path: "/", label: "Home", icon: HomeIcon }, // Added Home
+    { path: "/", label: "Home", icon: HomeIcon },
     { path: "/seller/campaigns", label: "Campaigns", icon: Megaphone },
     { path: "/seller/dashboard", label: "Dashboard", icon: ShoppingCart },
     { path: "/seller/earnings", label: "Earnings", icon: DollarSign },
@@ -45,29 +45,30 @@ const Navbar = () => {
 
   return (
     <>
+      {/* --- TOP NAVBAR (Fixed for Desktop & Mobile) --- */}
       <div className="fixed top-4 md:top-6 left-0 right-0 z-50 flex justify-center px-4 md:px-6">
         <nav className="flex items-center justify-between w-full max-w-6xl bg-white/80 backdrop-blur-md border border-gray-100 p-2 rounded-full shadow-lg">
-          {/* LOGO SECTION */}
+          {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3 pl-2 group">
-            <div className="w-10 h-10 rounded-full  group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-100 group-hover:scale-105 transition-transform">
               <img
                 src="/in.png"
                 alt="InFluencaa Logo"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <span className="font-black text-gray-800 text-xs md:text-sm tracking-tight leading-none">
                 INFLUENCAA
               </span>
-              <span className="text-[10px] text-primary font-bold uppercase">
+              <span className="text-[9px] md:text-[10px] text-primary font-bold uppercase">
                 Seller Hub
               </span>
             </div>
           </Link>
 
-          {/* DESKTOP LINKS */}
-          <div className="hidden md:flex items-center gap-1 bg-gray-50 p-1 rounded-full relative">
+          {/* DESKTOP NAV LINKS (Hidden on Mobile) */}
+          <div className="hidden md:flex items-center gap-1 bg-gray-50/50 p-1 rounded-full relative">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
@@ -102,11 +103,11 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* PROFILE SECTION */}
+          {/* PROFILE SECTION (Fixed Top Right) */}
           <div className="relative pr-1" ref={menuRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="w-10 h-10 rounded-full border-2 border-transparent hover:border-primary/40 transition-all overflow-hidden flex items-center justify-center bg-gray-100 shadow-sm"
+              className="w-10 h-10 rounded-full border border-gray-100 transition-all overflow-hidden flex items-center justify-center bg-gray-50 shadow-sm"
             >
               {sellerData?.thumbnail ? (
                 <img
@@ -125,21 +126,30 @@ const Navbar = () => {
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute top-12 md:top-14 right-0 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 min-w-[180px]"
+                  className="absolute top-12 md:top-14 right-0 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 min-w-[180px] md:min-w-[200px]"
                 >
+                  <div className="px-4 py-3 border-b border-gray-50 mb-1 text-left">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                      Signed in as
+                    </p>
+                    <p className="text-sm font-bold truncate text-gray-800">
+                      {sellerData?.name || "Seller"}
+                    </p>
+                  </div>
                   <button
                     onClick={() => {
                       navigate("/seller/profile");
                       setShowProfileMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
                   >
-                    <UserIcon size={16} className="text-gray-400" /> My Profile
+                    <UserIcon size={16} className="text-gray-400" />
+                    My Profile
                   </button>
                   <div className="h-px bg-gray-100 my-1 mx-2" />
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                   >
                     <LogOut size={16} /> Logout
                   </button>
@@ -150,40 +160,36 @@ const Navbar = () => {
         </nav>
       </div>
 
-      {/* MOBILE BOTTOM NAV */}
-      <div className="md:hidden fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4">
-        <nav className="flex items-center justify-around w-full max-w-sm bg-white/90 backdrop-blur-lg border border-gray-100 p-2 rounded-full shadow-2xl">
-          {navLinks.slice(0, 4).map(
-            (
-              link, // Show first 4 on mobile
-            ) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                className="relative p-3 rounded-full transition-colors duration-300"
-              >
-                {({ isActive }) => (
-                  <div className="relative z-10">
-                    <link.icon
-                      size={20}
-                      className={isActive ? "text-primary" : "text-gray-400"}
+      {/* --- MOBILE RIGHT FLOATING NAVIGATION DOCK (SMALL ICONS) --- */}
+      <div className="md:hidden fixed right-3 top-1/2 -translate-y-1/2 z-50">
+        <nav className="flex flex-col items-center gap-2 bg-white/70 backdrop-blur-md border border-white/40 p-1.5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              className="relative p-2.5 rounded-full transition-all duration-300 active:scale-90"
+            >
+              {({ isActive }) => (
+                <div className="relative z-10">
+                  <link.icon
+                    size={18}
+                    className={isActive ? "text-primary" : "text-gray-400"}
+                  />
+                  {isActive && (
+                    <motion.div
+                      layoutId="activePillMobile"
+                      className="absolute -inset-1.5 bg-primary/10 border border-primary/20 rounded-full -z-10"
+                      transition={{
+                        type: "spring",
+                        bounce: 0.3,
+                        duration: 0.4,
+                      }}
                     />
-                    {isActive && (
-                      <motion.div
-                        layoutId="activePillMobile"
-                        className="absolute -inset-2 bg-primary/10 rounded-full -z-10"
-                        transition={{
-                          type: "spring",
-                          bounce: 0.2,
-                          duration: 0.5,
-                        }}
-                      />
-                    )}
-                  </div>
-                )}
-              </NavLink>
-            ),
-          )}
+                  )}
+                </div>
+              )}
+            </NavLink>
+          ))}
         </nav>
       </div>
     </>

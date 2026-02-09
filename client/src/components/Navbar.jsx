@@ -8,7 +8,6 @@ import {
   User as UserIcon,
   Home as HomeIcon,
   BarChart3,
-  MessageSquare,
 } from "lucide-react";
 import { useClientContext } from "../context/ClientContext";
 
@@ -42,36 +41,35 @@ const Navbar = () => {
 
   return (
     <>
+      {/* --- TOP NAVBAR (Fixed for both Desktop & Mobile) --- */}
       <div className="fixed top-4 md:top-6 left-0 right-0 z-50 flex justify-center px-4 md:px-6">
         <nav className="flex items-center justify-between w-full max-w-6xl bg-white/80 backdrop-blur-md border border-gray-100 p-2 rounded-full shadow-lg">
-          {/* LOGO SECTION */}
+          {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3 pl-2 group">
-            <div className="w-10 h-10 rounded-full   group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full group-hover:scale-105 transition-transform overflow-hidden border border-gray-100">
               <img
                 src="/in.png"
                 alt="Logo"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <span className="font-black text-gray-800 text-xs md:text-sm tracking-tight leading-none uppercase">
                 INFLUENCAA
               </span>
-              {clientData?.brandName && (
-                <span className="text-[10px] text-primary font-bold uppercase truncate max-w-[80px]">
-                  {clientData.brandName}
-                </span>
-              )}
+              <span className="text-[9px] md:text-[10px] text-primary font-bold uppercase truncate max-w-[70px] md:max-w-[80px]">
+                {clientData?.brandName || "Client"}
+              </span>
             </div>
           </Link>
 
-          {/* DESKTOP LINKS */}
+          {/* DESKTOP NAV LINKS (Hidden on Mobile) */}
           <div className="hidden md:flex items-center gap-1 bg-gray-50/50 p-1 rounded-full relative">
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
-                className="relative px-4 py-2.5 rounded-full transition-colors duration-300"
+                className="relative px-4 py-2.5 rounded-full"
               >
                 {({ isActive }) => (
                   <div className="flex items-center px-2 py-1 gap-2 relative z-10">
@@ -101,11 +99,11 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* PROFILE SECTION */}
+          {/* PROFILE SECTION (Fixed Top Right) */}
           <div className="relative pr-1" ref={menuRef}>
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="w-10 h-10 rounded-full border-2 border-transparent hover:border-primary/40 transition-all overflow-hidden flex items-center justify-center bg-gray-100 shadow-sm"
+              className="w-9 h-9 md:w-10 md:h-10 rounded-full border border-gray-100 transition-all overflow-hidden flex items-center justify-center bg-gray-50 shadow-sm"
             >
               <img
                 src={
@@ -116,20 +114,19 @@ const Navbar = () => {
                 className="w-full h-full object-cover"
               />
             </button>
-
             <AnimatePresence>
               {showProfileMenu && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute top-12 md:top-14 right-0 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 min-w-[200px]"
+                  className="absolute top-12 md:top-14 right-0 bg-white border border-gray-100 rounded-2xl shadow-2xl p-2 min-w-[180px] md:min-w-[200px]"
                 >
-                  <div className="px-4 py-3 border-b border-gray-50 mb-1">
-                    <p className="text-xs text-gray-400 font-medium">
+                  <div className="px-4 py-3 border-b border-gray-50 mb-1 text-left text-gray-800">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                       Signed in as
                     </p>
-                    <p className="text-sm font-bold text-gray-800 truncate">
+                    <p className="text-sm font-bold truncate">
                       {clientData?.name || "Client"}
                     </p>
                   </div>
@@ -138,15 +135,14 @@ const Navbar = () => {
                       navigate("/profile");
                       setShowProfileMenu(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
                   >
-                    <UserIcon size={16} className="text-gray-400" /> Brand
-                    Settings
+                    <UserIcon size={16} className="text-gray-400" /> Settings
                   </button>
                   <div className="h-px bg-gray-100 my-1 mx-2" />
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                   >
                     <LogOut size={16} /> Logout
                   </button>
@@ -154,6 +150,39 @@ const Navbar = () => {
               )}
             </AnimatePresence>
           </div>
+        </nav>
+      </div>
+
+      {/* --- MOBILE RIGHT FLOATING NAVIGATION DOCK (SMALL ICONS) --- */}
+      <div className="md:hidden fixed right-3 top-1/2 -translate-y-1/2 z-50">
+        <nav className="flex flex-col items-center gap-2 bg-white/70 backdrop-blur-md border border-white/40 p-1.5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              className="relative p-2.5 rounded-full transition-all duration-300 active:scale-90"
+            >
+              {({ isActive }) => (
+                <div className="relative z-10">
+                  <link.icon
+                    size={18} // Smaller Icons
+                    className={isActive ? "text-primary" : "text-gray-400"}
+                  />
+                  {isActive && (
+                    <motion.div
+                      layoutId="clientActiveRightPill"
+                      className="absolute -inset-1.5 bg-primary/10 border border-primary/20 rounded-full -z-10"
+                      transition={{
+                        type: "spring",
+                        bounce: 0.3,
+                        duration: 0.4,
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </NavLink>
+          ))}
         </nav>
       </div>
     </>
