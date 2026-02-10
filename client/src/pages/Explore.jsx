@@ -266,7 +266,7 @@ const Explore = () => {
       : socialPlatforms[filters.platform]?.icon || Globe;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans pb-32 pt-28 px-3 sm:px-8">
+    <div className="min-h-screen  border-b border-primary bg-[#F8FAFC] font-sans pb-32 pt-28 px-3 sm:px-14">
       {/* --- GRID --- */}
       <div className="max-w-[1920px] mx-auto">
         {loading ? (
