@@ -4,6 +4,8 @@ import {
   loginClient,
   getClientProfile,
   getAllSellers,
+  getSellerPublicProfile,
+  getSellerReviews,
   createOrderRequest,
   getMyOrders,
   getOrderDetails,
@@ -26,17 +28,22 @@ clientRouter.get("/get-profile", clientAuth, getClientProfile);
 
 // --- Seller & Marketplace Routes ---
 clientRouter.get("/all-sellers", clientAuth, getAllSellers);
+clientRouter.get("/seller/:id", clientAuth, getSellerPublicProfile); // <--- New Route for Overview
+clientRouter.get("/seller/:id/reviews", clientAuth, getSellerReviews); // <--- New Route for Reviews
 
 // --- Order Routes ---
-clientRouter.post("/create-order", clientAuth, createOrderRequest); // Create Request
-clientRouter.get("/my-orders", clientAuth, getMyOrders); // List all
-clientRouter.get("/order/:id", clientAuth, getOrderDetails); // Get single details
+// Updated path to match BookOrder.jsx frontend call
+clientRouter.post("/order/create", clientAuth, createOrderRequest);
+clientRouter.get("/my-orders", clientAuth, getMyOrders);
+clientRouter.get("/order/:id", clientAuth, getOrderDetails);
 
-// --- Payment Routes ---
-clientRouter.post("/payment/initiate", clientAuth, initiatePayment); // Step 1: Open Gateway
-clientRouter.post("/payment/verify", clientAuth, verifyPayment); // Step 2: Confirm & Create Ledger
-clientRouter.post("/payment/release-milestone", clientAuth, releaseMilestone); // Step 3: Release Funds
-clientRouter.get("/order/chat/:orderId", clientAuth, getChatHistory);
+// --- Resolution & Support ---
 clientRouter.post("/order/resolution", clientAuth, submitOrderResolution);
+
+// --- Payment & Chat Routes ---
+clientRouter.post("/payment/initiate", clientAuth, initiatePayment);
+clientRouter.post("/payment/verify", clientAuth, verifyPayment);
+clientRouter.post("/payment/release-milestone", clientAuth, releaseMilestone);
+clientRouter.get("/order/chat/:orderId", clientAuth, getChatHistory);
 
 export default clientRouter;

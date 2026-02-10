@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { useClientContext } from "./context/ClientContext";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
@@ -13,12 +13,20 @@ import Footer from "./components/Footer";
 
 const App = () => {
   const { clientToken } = useClientContext();
+  const ScrollToTop = () => {
+    const { pathname } = useLocation();
 
+    useEffect(() => {
+      window.scrollTo(0, 0);
+    }, [pathname]);
+
+    return null;
+  };
   return (
     <div>
       <Toaster />
       {clientToken && <Navbar />}
-
+      <ScrollToTop />
       <Routes>
         {clientToken ? (
           <>

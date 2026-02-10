@@ -3,6 +3,7 @@ import {
   acceptOrderRequest,
   addCampaignPackage,
   deleteCampaignPackage,
+  deletePortfolioImage,
   getLinkedinAuthUrl,
   getMyOrders,
   getProfile,
@@ -21,6 +22,7 @@ import {
   twitterCallback,
   updateCampaignPackage,
   updateProfile,
+  uploadPortfolioImages,
   youtubeCallback,
 } from "../controllers/sellerController.js";
 import sellerAuth from "../middlewares/sellerAuth.js";
@@ -75,5 +77,11 @@ sellerRouter.post(
 );
 sellerRouter.get("/earnings", sellerAuth, getSellerEarnings);
 sellerRouter.post("/withdraw", sellerAuth, requestWithdrawal);
-
+sellerRouter.post(
+  "/portfolio/add",
+  sellerAuth,
+  upload.array("images", 5),
+  uploadPortfolioImages,
+);
+sellerRouter.put("/portfolio/remove", sellerAuth, deletePortfolioImage);
 export default sellerRouter;

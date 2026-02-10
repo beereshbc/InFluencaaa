@@ -58,44 +58,30 @@ export const loginSeller = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required",
-      });
-    }
+    const seller = await Seller.findOne({ email }).select("+password");
 
-    const seller = await Seller.findOne({ email });
+    console.log(
+      "Password found in DB:",
+      seller ? "YES (hidden for safety)" : "NO USER FOUND",
+    );
+
     if (!seller) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+      return res.json({ success: false, message: "Seller does not exist" });
     }
-
+    if (!password || !seller.password) {
+      return res.json({ success: false, message: "Missing password data" });
+    }
     const isMatch = await bcrypt.compare(password, seller.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid credentials",
-      });
+
+    if (isMatch) {
+      const token = jwt.sign({ id: seller._id }, process.env.JWT_SECRET);
+      res.json({ success: true, token });
+    } else {
+      res.json({ success: false, message: "Invalid credentials" });
     }
-
-    const token = jwt.sign({ id: seller._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      token,
-    });
   } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    console.log("Detailed Error:", error);
+    res.json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -1071,6 +1057,76 @@ export const requestWithdrawal = async (req, res) => {
     });
   } catch (error) {
     console.error("Withdrawal Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Upload Portfolio Images (Campaign Snaps)
+// @route   POST /api/seller/portfolio/add
+export const uploadPortfolioImages = async (req, res) => {
+  try {
+    const sellerId = req.sellerId;
+
+    if (!req.files || req.files.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No images provided" });
+    }
+
+    const imageUrls = [];
+
+    // Upload each file to Cloudinary
+    for (const file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: "sellers/portfolio",
+      });
+      imageUrls.push(result.secure_url);
+
+      // Clean up local file
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    }
+
+    // Push new URLs to the portfolio array
+    const updatedSeller = await Seller.findByIdAndUpdate(
+      sellerId,
+      { $push: { portfolio: { $each: imageUrls } } },
+      { new: true },
+    ).select("portfolio");
+
+    res.json({
+      success: true,
+      message: "Snaps uploaded successfully",
+      portfolio: updatedSeller.portfolio,
+    });
+  } catch (error) {
+    console.error("Portfolio Upload Error:", error);
+    res.status(500).json({ success: false, message: "Upload failed" });
+  }
+};
+
+// @desc    Delete a Portfolio Image
+// @route   PUT /api/seller/portfolio/remove
+export const deletePortfolioImage = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const sellerId = req.sellerId;
+
+    // Remove from DB
+    const updatedSeller = await Seller.findByIdAndUpdate(
+      sellerId,
+      { $pull: { portfolio: imageUrl } },
+      { new: true },
+    ).select("portfolio");
+
+    // Optional: Delete from Cloudinary using public_id extraction
+    // (Skipped for brevity, but recommended for production)
+
+    res.json({
+      success: true,
+      message: "Image removed",
+      portfolio: updatedSeller.portfolio,
+    });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  User,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Sparkles,
+  ShieldCheck,
+  Zap,
+} from "lucide-react";
 import { useSellerContext } from "../context/SellerContext";
 import toast from "react-hot-toast";
 
@@ -15,21 +25,15 @@ const Login = () => {
     password: "",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     const endpoint = isLogin ? "/api/seller/login" : "/api/seller/register";
-
     const payload = isLogin
-      ? {
-          email: formData.email,
-          password: formData.password,
-        }
+      ? { email: formData.email, password: formData.password }
       : {
           fullName: formData.name,
           email: formData.email,
@@ -38,55 +42,39 @@ const Login = () => {
 
     try {
       const { data } = await axios.post(endpoint, payload);
-
       if (!data?.success) throw new Error("Authentication failed");
-
       localStorage.setItem("sellerToken", data.token);
       setSellerToken(data.token);
-
       toast.success(isLogin ? "Welcome back!" : "Account created!");
-
       setTimeout(() => navigate("/"), 1500);
     } catch (err) {
-      const message =
-        err.response?.data?.message || err.message || "Something went wrong";
-
-      toast.error(message);
-      console.error("Auth Error:", message);
+      toast.error(err.response?.data?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Blobs */}
+      <div className="absolute top-0 -left-4 w-72 h-72 bg-red-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" />
+      <div className="absolute top-0 -right-4 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-700" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100"
+        className="w-full max-w-[440px] z-10"
       >
-        <div className="p-8">
-          <div className="text-center mb-8">
-            <motion.div
-              key={isLogin ? "login-icon" : "reg-icon"}
-              initial={{ rotate: -180, scale: 0 }}
-              animate={{ rotate: 0, scale: 1 }}
-              className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20"
-            >
-              {isLogin ? (
-                <Lock className="text-white" size={36} />
-              ) : (
-                <User className="text-white" size={36} />
-              )}
-            </motion.div>
-
-            <h2 className="text-3xl font-black text-gray-800 tracking-tight">
-              {isLogin ? "Welcome Back" : "Create Account"}
+        <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white p-8 md:p-12">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-red-50 text-[#FF5B5B] rounded-2xl mb-6 border border-red-100 shadow-sm">
+              <Sparkles size={28} />
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+              {isLogin ? "Welcome back" : "Get started"}
             </h2>
-            <p className="text-gray-500 mt-2">
-              {isLogin
-                ? "Please enter your details to sign in"
-                : "Fill in the details to get started"}
+            <p className="text-slate-500 font-medium">
+              {isLogin ? "Creator login portal" : "Join the creator economy"}
             </p>
           </div>
 
@@ -97,17 +85,17 @@ const Login = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="relative group"
+                  className="relative overflow-hidden"
                 >
                   <User
-                    className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-primary transition-colors"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                     size={18}
                   />
                   <input
                     type="text"
                     name="name"
                     placeholder="Full Name"
-                    className="w-full pl-10 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    className="w-full pl-12 pr-4 py-4 bg-white/50 border border-slate-200 focus:border-[#FF5B5B] rounded-2xl outline-none transition-all font-semibold text-slate-800"
                     value={formData.name}
                     onChange={handleChange}
                     required={!isLogin}
@@ -116,32 +104,32 @@ const Login = () => {
               )}
             </AnimatePresence>
 
-            <div className="relative group">
+            <div className="relative">
               <Mail
-                className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-primary transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 size={18}
               />
               <input
                 type="email"
                 name="email"
                 placeholder="Email Address"
-                className="w-full pl-10 pr-4 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-4 bg-white/50 border border-slate-200 focus:border-[#FF5B5B] rounded-2xl outline-none transition-all font-semibold text-slate-800"
                 value={formData.email}
                 onChange={handleChange}
                 required
               />
             </div>
 
-            <div className="relative group">
+            <div className="relative">
               <Lock
-                className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-primary transition-colors"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
                 size={18}
               />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
-                className="w-full pl-10 pr-12 py-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full pl-12 pr-12 py-4 bg-white/50 border border-slate-200 focus:border-[#FF5B5B] rounded-2xl outline-none transition-all font-semibold text-slate-800"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -149,7 +137,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-gray-400 hover:text-primary transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#FF5B5B] transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -157,32 +145,33 @@ const Login = () => {
 
             <motion.button
               whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.99 }}
               type="submit"
               disabled={isLoading}
-              className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/30 hover:bg-primary-dark transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-70"
+              className="w-full py-4 bg-[#FF5B5B] hover:bg-[#E04F4F] text-white font-black text-base rounded-2xl shadow-lg shadow-red-100 transition-all flex items-center justify-center gap-2 mt-2"
             >
               {isLoading ? (
-                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  {isLogin ? "Sign In" : "Get Started"} <ArrowRight size={20} />
+                  {isLogin ? "Sign In" : "Create Account"}
+                  <ArrowRight size={18} />
                 </>
               )}
             </motion.button>
           </form>
-        </div>
 
-        <div className="bg-gray-50 py-6 px-8 text-center border-t border-gray-100">
-          <p className="text-gray-600">
-            {isLogin ? "New here?" : "Already have an account?"}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="ml-2 text-primary font-bold hover:underline underline-offset-4"
-            >
-              {isLogin ? "Create an account" : "Log in now"}
-            </button>
-          </p>
+          <div className="mt-10 text-center">
+            <p className="text-slate-400 font-bold text-sm">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}
+              <button
+                onClick={() => setIsLogin(!isLogin)}
+                className="ml-2 text-[#FF5B5B] hover:text-[#E04F4F] transition-colors"
+              >
+                {isLogin ? "Sign up" : "Log in"}
+              </button>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>

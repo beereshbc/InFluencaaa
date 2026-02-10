@@ -1,5 +1,5 @@
-import React from "react";
-import { Route, Routes } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Route, Routes, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import { useSellerContext } from "./context/SellerContext";
 import Home from "./pages/Home";
@@ -15,12 +15,22 @@ import Footer from "./components/Footer";
 import { Toaster } from "react-hot-toast";
 
 const App = () => {
+  const ScrollToTop = () => {
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+      // Instantly scrolls to the top-left corner
+      window.scrollTo(0, 0);
+    }, [pathname]); // Fires every time the URL path changes
+
+    return null;
+  };
   const { sellerToken } = useSellerContext();
   return (
     <div>
       <Toaster />
       {sellerToken && <Navbar />}
-
+      <ScrollToTop />
       <Routes>
         {sellerToken ? (
           <>

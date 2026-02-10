@@ -9,7 +9,7 @@ const orderResolutionSchema = new mongoose.Schema(
     },
     clientId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Client",
+      ref: "client",
       required: true,
     },
     sellerId: {

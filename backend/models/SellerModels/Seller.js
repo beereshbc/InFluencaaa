@@ -74,6 +74,7 @@ const sellerSchema = new mongoose.Schema(
 
     totalFollowers: { type: Number, default: 0 },
     avgEngagementRate: { type: Number, default: 0 },
+    portfolio: [{ type: String }],
 
     payoutDetails: {
       accountHolderName: { type: String, select: false, trim: true },

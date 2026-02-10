@@ -95,10 +95,15 @@ const getClientProfile = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-const getAllSellers = async (req, res) => {
+
+// @desc    Get All Active Sellers
+// @route   GET /api/client/all-sellers
+export const getAllSellers = async (req, res) => {
   try {
     const sellers = await Seller.find({ isBlocked: false })
-      .select("-password -email -phone -twitterOAuth -linkedinOAuth")
+      .select(
+        "fullName thumbnail niche rating totalReviews location connectedPlatforms bio portfolio",
+      )
       .lean();
 
     const campaigns = await Campaign.find({}).lean();
@@ -108,19 +113,93 @@ const getAllSellers = async (req, res) => {
         (c) => c.sellerId.toString() === seller._id.toString(),
       );
 
+      const activeCampaigns = sellerCampaigns.filter(
+        (c) => c.packages && c.packages.some((p) => p.published),
+      );
+
       return {
         ...seller,
-        campaigns: sellerCampaigns,
+        campaigns: activeCampaigns,
       };
     });
+
     const activeSellers = combinedData.filter((s) => s.campaigns.length > 0);
 
     res.json({ success: true, sellers: activeSellers });
   } catch (error) {
-    console.error("Marketplace Data Error:", error);
-    res.json({ success: false, message: "Failed to load marketplace data" });
+    console.error("Marketplace Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load marketplace" });
   }
 };
+
+// @desc    Get Single Seller Public Profile
+// @route   GET /api/client/seller/:id
+export const getSellerPublicProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // --- FIX IS HERE ---
+    // Removed "-payoutDetails" from the select string.
+    // The sub-fields (accountNumber, etc.) are already hidden by the Schema.
+    const seller = await Seller.findById(id)
+      .select("-password -email -phone -twitterOAuth -linkedinOAuth -__v")
+      .lean();
+
+    if (!seller) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Seller not found" });
+    }
+
+    // 2. Fetch Seller's Campaigns
+    const campaigns = await Campaign.find({ sellerId: id }).lean();
+
+    // 3. Filter only published packages
+    const validCampaigns = campaigns
+      .map((camp) => ({
+        ...camp,
+        packages: camp.packages.filter((p) => p.published),
+      }))
+      .filter((camp) => camp.packages.length > 0);
+
+    // 4. Combine
+    const fullProfile = {
+      ...seller,
+      campaigns: validCampaigns,
+    };
+
+    res.json({ success: true, seller: fullProfile });
+  } catch (error) {
+    console.error("Profile Fetch Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// @desc    Get Seller Reviews
+// @route   GET /api/client/seller/:id/reviews
+export const getSellerReviews = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const reviews = await OrderResolution.find({
+      sellerId: id,
+      type: "review",
+    })
+      .populate("clientId", "name thumbnail")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.json({ success: true, reviews });
+  } catch (error) {
+    console.error("Review Fetch Error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// @desc    Create Order Request
+// @route   POST /api/client/order/create
 export const createOrderRequest = async (req, res) => {
   try {
     const {
@@ -135,6 +214,12 @@ export const createOrderRequest = async (req, res) => {
 
     const clientId = req.clientId;
 
+    if (!sellerId || !totalAmount || !orderDetails.brandName) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields" });
+    }
+
     const sellerExists = await Seller.findById(sellerId);
     if (!sellerExists) {
       return res
@@ -148,46 +233,65 @@ export const createOrderRequest = async (req, res) => {
       sellerName,
       platform,
       serviceType,
-      serviceDetails,
-      orderDetails,
+      serviceDetails: {
+        amount: serviceDetails.amount,
+        timeline: serviceDetails.timeline,
+        revisions: serviceDetails.revisions,
+        deliverables: serviceDetails.deliverables || [],
+      },
+      orderDetails: {
+        brandName: orderDetails.brandName,
+        contactPerson: orderDetails.contactPerson,
+        email: orderDetails.email,
+        phone: orderDetails.phone,
+        campaignBrief: orderDetails.campaignBrief,
+        budget: orderDetails.budget,
+        timeline: orderDetails.timeline,
+        specialRequirements: orderDetails.specialRequirements || "",
+        targetAudience: orderDetails.targetAudience || "",
+        campaignGoals: orderDetails.campaignGoals || "",
+        contentGuidelines: orderDetails.contentGuidelines || "",
+      },
       totalAmount,
       status: "requested",
-      paymentId: null,
+      chatHistory: [],
     });
 
     await newOrder.save();
 
     res.status(201).json({
       success: true,
-      message: "Order request sent successfully! Waiting for seller approval.",
-      order: newOrder,
+      message: "Request sent to creator! View in Dashboard.",
+      orderId: newOrder._id,
     });
   } catch (error) {
     console.error("Create Order Error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// @desc    Get Client Orders
+// @route   GET /api/client/my-orders
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ clientId: req.clientId })
+      .select("-chatHistory")
       .sort({ createdAt: -1 })
       .populate("sellerId", "fullName thumbnail niche");
 
     res.json({ success: true, count: orders.length, data: orders });
   } catch (error) {
-    console.error("Get Orders Error:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+// @desc    Get Single Order Details
+// @route   GET /api/client/order/:id
 export const getOrderDetails = async (req, res) => {
   try {
     const orderId = req.params.id;
     const clientId = req.clientId;
 
-    // 1. Find Order and ensure it belongs to this client
     const order = await Order.findOne({ _id: orderId, clientId });
 
     if (!order) {
@@ -196,26 +300,22 @@ export const getOrderDetails = async (req, res) => {
         .json({ success: false, message: "Order not found" });
     }
 
-    // 2. Find Linked Payment (if exists)
     const payment = await Payment.findOne({ orderId: order._id });
 
-    res.json({
-      success: true,
-      order,
-      payment,
-    });
+    res.json({ success: true, order, payment });
   } catch (error) {
-    console.error("Get Order Details Error:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+// @desc    Submit Review / Report / Refund
+// @route   POST /api/client/order/resolution
 export const submitOrderResolution = async (req, res) => {
   try {
     const { orderId, sellerId, type, rating, reasonCategory, description } =
       req.body;
     const clientId = req.clientId;
 
-    // 1. Create Resolution Record
     const resolution = await OrderResolution.create({
       orderId,
       clientId,
@@ -226,22 +326,21 @@ export const submitOrderResolution = async (req, res) => {
       description,
     });
 
-    // 2. Handle Specific Logics
     if (type === "review") {
-      // Update Order Status to Completed (if not already)
       await Order.findByIdAndUpdate(orderId, { status: "completed" });
-
-      // Recalculate Seller Average Rating
       const reviews = await OrderResolution.find({ sellerId, type: "review" });
-      const avgRating =
-        reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length;
+
+      let avgRating = 0;
+      if (reviews.length > 0) {
+        const totalStars = reviews.reduce((acc, item) => acc + item.rating, 0);
+        avgRating = totalStars / reviews.length;
+      }
 
       await Seller.findByIdAndUpdate(sellerId, {
         rating: avgRating.toFixed(1),
         $inc: { totalReviews: 1 },
       });
     } else if (type === "refund_request") {
-      // Flag order for Admin
       await Order.findByIdAndUpdate(orderId, { status: "dispute_raised" });
     }
 
@@ -254,4 +353,4 @@ export const submitOrderResolution = async (req, res) => {
   }
 };
 
-export { registerClient, loginClient, getClientProfile, getAllSellers };
+export { registerClient, loginClient, getClientProfile };
